@@ -116,7 +116,7 @@ class ETCAPS(nn.Module):
 
         self.num_caps = args.num_caps
         self.caps_size = args.caps_size
-        planes = 64
+        planes = 16
         self.depth = args.depth
         equivariant_transformers = TransformerSequence(
             Translation(predictor_cls=EquivariantPosePredictor, in_channels=channels, nf=32),
@@ -194,7 +194,7 @@ class SRCAPS(nn.Module):
 
         self.num_caps = args.num_caps
         self.caps_size = args.caps_size
-        planes = 64
+        planes = 16
         self.depth = args.depth
         self.backbone = r.__dict__[args.encoder](self.cfg_data, args.num_caps, args.caps_size, args.depth)
 
@@ -227,7 +227,6 @@ class SRCAPS(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        x = self.et_layer(x)
         out = self.backbone(x)
         a, pose = self.conv_a(out), self.conv_pose(out)
         a, pose = torch.sigmoid(self.bn_a(a)), self.bn_pose(pose)
@@ -251,3 +250,89 @@ class SRCAPS(nn.Module):
         a = torch.sigmoid(self.bn_a(self.conv_a(out)))
 
         return a
+
+
+
+#Equivariant Transformer Network with Resnet Classifer
+class Transformer(nn.Module):
+    def __init__(self, args):
+        super(Transformer, self).__init__()
+        self.cfg_data = DATASET_CONFIGS[args.dataset]
+        channels, classes = self.cfg_data['channels'], self.cfg_data['classes']
+
+        self.num_caps = args.num_caps
+        self.caps_size = args.caps_size
+        planes = 16
+        self.depth = args.depth
+        equivariant_transformers = TransformerSequence(
+            Translation(predictor_cls=EquivariantPosePredictor, in_channels=channels, nf=32),
+            RotationScale(predictor_cls=EquivariantPosePredictor, in_channels=channels, nf=32),
+            ScaleX(predictor_cls=EquivariantPosePredictor, in_channels=channels, nf=32)
+        ) 
+        self.et_layer = TransformerLayer(
+            transformer=equivariant_transformers,
+            coords=logpolar_grid, 
+        )
+        
+        self.backbone = r.__dict__[args.encoder](self.cfg_data, args.num_caps, args.caps_size, args.depth)
+
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(64, classes)  
+
+        self.apply(r.weights_init)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.et_layer(x)
+        x = self.backbone(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
+        return x
+
+
+
+
+#Baseline ResNet
+class ResNet(nn.Module):
+    def __init__(self, args):
+        super(ResNet, self).__init__()
+        self.cfg_data = DATASET_CONFIGS[args.dataset]
+        channels, classes = self.cfg_data['channels'], self.cfg_data['classes']
+
+        self.num_caps = args.num_caps
+        self.caps_size = args.caps_size
+        planes = 16
+        self.depth = args.depth        
+        self.backbone = r.__dict__[args.encoder](self.cfg_data, args.num_caps, args.caps_size, args.depth)
+
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(64, classes)  
+
+        self.apply(r.weights_init)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
+        return x
