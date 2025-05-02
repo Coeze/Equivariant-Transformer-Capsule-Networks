@@ -114,9 +114,12 @@ def main_worker(gpu, args):
     torch.cuda.set_device(gpu)
     args.device = gpu
     torch.backends.cudnn.benchmark = True
-    os.makedirs(args.save_dir, exist_ok=True)
+
+    save_path = f"{args.save_dir}/{args.model_name}"
+    os.makedirs(save_path, exist_ok=True)
+
     os.makedirs(args.exp_dir, exist_ok=True)
-    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp='azimuth')
+    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp='elevation')
     
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True) # Distributing the dataset across GPUs
     assert args.batch_size % args.world_size == 0
@@ -144,8 +147,12 @@ def main_worker(gpu, args):
         model = m.ETCAPS(args).cuda(gpu)
     elif args.model_name == 'srcaps':
         model = m.SRCAPS(args).cuda(gpu)
+    elif args.model_name == 'et':
+        model = m.Transformer(args).cuda(gpu)
+    elif args.model_name == 'resnet20':
+        model = m.ResNet(args).cuda(gpu)
     else:
-        raise ValueError('Model type not recognised, choose either: etcaps or srcaps')
+        raise ValueError('Model type not recognised, choose either: etcaps or srcaps or et')
 
     model = nn.SyncBatchNorm.convert_sync_batchnorm(model) # Synchronise batch norm statistics across GPUs
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[gpu],find_unused_parameters=True) # Synchronize gradients across GPUs
