@@ -18,7 +18,7 @@ import neptune
 run = neptune.init_run(
     project="coeze04/Honours-Dissertation",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIzZGYwOTBiYi02N2U2LTQ2OTUtYjg2Ni1jYzFiNWU2MWE3M2QifQ==",
-    custom_run_id="d7e883da-f029-4f91-9442-02ba8ae87a46"
+    custom_run_id="a32e0c78-6a23-42f6-8c03-991717f807"
 ) 
 
 def train(model, train_loader, val_loader, scheduler, optimizer, args):
@@ -39,7 +39,7 @@ def train(model, train_loader, val_loader, scheduler, optimizer, args):
         )
     best_valid_acc = 0 
 
-    params = {"learning_rate": args.lr, "optimizer": "Adam", "dataset":args.dataset, "batch_size": args.batch_size, "num_epochs": args.epochs, "num_caps": args.num_caps, "caps_size": args.caps_size, "encoder": args.encoder, "depth": args.depth, "et": args.et}
+    params = {"learning_rate": args.lr, "optimizer": "Adam", "dataset":args.dataset, "batch_size": args.batch_size, "num_epochs": args.epochs, "num_caps": args.num_caps, "caps_size": args.caps_size, "encoder": args.encoder, "depth": args.depth, "model name": args.model_name}
     run["parameters"] = params
 
     loss_fn = DynamicRoutingLoss()
@@ -101,7 +101,7 @@ def train(model, train_loader, val_loader, scheduler, optimizer, args):
                 }
 
                 # Save the checkpoint to a file
-                torch.save(checkpoint, f'{args.save_dir}/{args.dataset}_best_{args.num_caps}_{args.depth}.pth')
+                torch.save(checkpoint, f'{args.save_dir}/{args.model_name}/{args.dataset}_best_{args.num_caps}_{args.depth}.pth')
 
         # decay lr
         scheduler.step()
