@@ -13,10 +13,10 @@ source ./venv/bin/activate
 
 python main.py \
     --data_dir ./data \
-    --dataset cifar10 \
+    --dataset svhn \
     --batch_size 64 \
---et \
---epochs 150 \
+--model_name etcaps \
+--epochs 50 \
 --num_caps 32 \
 --depth 1 \
 
