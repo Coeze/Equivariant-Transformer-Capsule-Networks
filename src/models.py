@@ -188,7 +188,7 @@ class ETCAPS(nn.Module):
 # Just a normal self-routing capsule network without equivariant transformers
 class SRCAPS(nn.Module):
     def __init__(self, args):
-        super(ETCAPS, self).__init__()
+        super(SRCAPS, self).__init__()
         self.cfg_data = DATASET_CONFIGS[args.dataset]
         channels, classes = self.cfg_data['channels'], self.cfg_data['classes']
 
