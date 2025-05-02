@@ -7,19 +7,15 @@ import argparse
 import pandas as pd
 from functools import partial
 import torch
-import src.models2 as m
-
+import src.models as m
+import torchvision
 from liederiv.lee.e2e_lee import get_equivariance_metrics as get_lee_metrics
-from liederiv.lee.e2e_other import get_equivariance_metrics as get_discrete_metrics
 from liederiv.lee.loader import get_loaders, eval_average_metrics_wstd
 
 def numparams(model):
     return sum(p.numel() for p in model.parameters())
 
 def get_metrics(args, key, loader, model, max_mbs=400):
-    # discrete_metrics = eval_average_metrics_wstd(
-    #     loader, partial(get_discrete_metrics, model), max_mbs=max_mbs,
-    # )
     lee_metrics = eval_average_metrics_wstd(
         loader, partial(get_lee_metrics, model), max_mbs=max_mbs,
     )
@@ -42,7 +38,6 @@ def get_args_parser():
     parser.add_argument('--data_dir', type=str, default='./data', help='Path to dataset directory')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
     parser.add_argument('--random_seed', type=int, default=42, help='Random seed for reproducibility')
-    parser.add_argument('--et', action='store_true', help='Add a sequence of equivariant transformers')
     parser.add_argument(
         "--caps_size", type=int, default=4, help="Size of capsules"
     )
@@ -63,12 +58,13 @@ def main(args):
 
     print(args.modelname)
     
-    print(args.et)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = m.ETCAPS(backbone=args.encoder, num_caps=args.num_caps, caps_size=args.caps_size, depth=args.depth, cfg_data=DATASET_CONFIGS[args.dataset])
-    checkpoint = torch.load(f'svhn_trained_model/svhn_best.pth', map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-
+    if args.modelname == "etcaps":
+        model = m.ETCAPS(args)
+    elif args.modelname == "srcaps":
+        model = m.SRCAPS(args)
+    elif args.modelname == "resnet18":
+        model = torchvision.models.resnet18(pretrained=False)
     model.eval()
 
     evaluated_metrics = []
