@@ -72,6 +72,10 @@ parser.add_argument("--port", type=int, default=52472)
 parser.add_argument(
     "--exp_dir", type=Path, default=Path("experiments/default"), help="Experiment directory"
 )
+parser.add_argument(
+    "--model_name", type=str, default='etcaps', help="name of model"
+)
+
 
 def main():
     args = parser.parse_args()
@@ -112,7 +116,7 @@ def main_worker(gpu, args):
     torch.backends.cudnn.benchmark = True
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.exp_dir, exist_ok=True)
-    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp='full')
+    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp='azimuth')
     
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True) # Distributing the dataset across GPUs
     assert args.batch_size % args.world_size == 0
@@ -135,7 +139,14 @@ def main_worker(gpu, args):
         pin_memory=True,
         sampler=sampler_val,
     )
-    model = m.ETCAPS(args).cuda(gpu)
+    
+    if args.model_name == 'etcaps':
+        model = m.ETCAPS(args).cuda(gpu)
+    elif args.model_name == 'srcaps':
+        model = m.SRCAPS(args).cuda(gpu)
+    else:
+        raise ValueError('Model type not recognised, choose either: etcaps or srcaps')
+
     model = nn.SyncBatchNorm.convert_sync_batchnorm(model) # Synchronise batch norm statistics across GPUs
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[gpu],find_unused_parameters=True) # Synchronize gradients across GPUs
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.wd) 
