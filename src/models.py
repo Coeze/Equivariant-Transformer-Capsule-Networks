@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from src.coordinates import logpolar_grid
-from src.networks import BasicCNN, EquivariantPosePredictor, TransformerLayer
+from src.networks import EquivariantPosePredictor, TransformerLayer
 from src.transformers import RotationScale, ScaleX, TransformerSequence, Translation
 
 import src.resnet as r
