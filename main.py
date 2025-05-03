@@ -49,6 +49,11 @@ parser.add_argument(
     "--save_dir", type=str, default="models/", help="Directory to save models"
 )
 
+parser.add_argument(
+    "--exp", type=str, default='full', help="experiment type", choices=['full', 'azimuth', 'elevation']
+)
+
+
 # Model Architecture Settings
 parser.add_argument(
     "--encoder", type=str, default="resnet20", help="The resnet encoder to use"
@@ -119,7 +124,7 @@ def main_worker(gpu, args):
     os.makedirs(save_path, exist_ok=True)
 
     os.makedirs(args.exp_dir, exist_ok=True)
-    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp='elevation')
+    train_dataset, val_dataset = get_train_valid_dataset(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, random_seed=args.random_seed, exp=args.exp)
     
     sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True) # Distributing the dataset across GPUs
     assert args.batch_size % args.world_size == 0
