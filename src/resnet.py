@@ -66,8 +66,8 @@ class BasicBlock(nn.Module):
 class ResNet(nn.Module):
         def __init__(self, block, num_blocks, channels):
             super(ResNet, self).__init__()
-            self.in_planes = 128
-            planes = 128
+            self.in_planes = 16
+            planes = 16
             
             self.conv1 = nn.Conv2d(channels, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False)
             self.bn1 = nn.BatchNorm2d(self.in_planes)
