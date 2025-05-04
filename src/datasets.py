@@ -82,9 +82,7 @@ def get_test_loader(data_dir,
                     batch_size,
                     num_workers=0,
                     num_samples=-1,
-                    pin_memory=False,
-                    exp='azimuth',
-                    familiar=False):
+                    pin_memory=False):
 
     data_dir = data_dir + '/' + dataset
 
@@ -122,12 +120,13 @@ def get_test_loader(data_dir,
         [num_samples, len(dataset) - num_samples],
         generator=torch.Generator().manual_seed(42),
     )
-    elif num_samples == -1:
-         data_loader = torch.utils.data.DataLoader(
+    else:
+        raise ValueError('Sorry please select a valid number of datapoints')
+
+    data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory,
     )
-    else:
-        raise ValueError('Sorry please select a valid number of datapoints')
+
 
     return data_loader
