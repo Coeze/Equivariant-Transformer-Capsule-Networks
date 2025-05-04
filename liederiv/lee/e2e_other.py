@@ -6,12 +6,11 @@ import pandas as pd
 import numpy as np
 
 import sys
-sys.path.append("liederiv/stylegan3")
-from liederiv.stylegan3.metrics.equivariance import (
-    apply_integer_translation,
-    apply_fractional_translation,
-    apply_fractional_rotation,
-)
+# from liederiv.stylegan3.metrics.equivariance import (
+#     apply_integer_translation,
+#     apply_fractional_translation,
+#     apply_fractional_rotation,
+# )
 
 from .transforms import (
     translate,
