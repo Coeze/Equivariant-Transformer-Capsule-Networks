@@ -68,7 +68,12 @@ parser.add_argument(
  "--path_to_model", type=Path, help="path to model"
 
 )
-
+parser.add_argument(
+    "--exp", type=str, default='full', help="experiment type", choices=['full', 'azimuth', 'elevation']
+)
+parser.add_argument(
+    "--familiar", action='store_true', help="Use seen data in smallnorb evaluation"
+)
 def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -97,7 +102,7 @@ def main():
     else:
         raise ValueError("Invalid model name. Choose from ['etcaps', 'et', 'srcaps', 'resnet20']")
     
-    test_loader = get_test_loader(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size)
+    test_loader = get_test_loader(data_dir=args.data_dir, dataset=args.dataset, batch_size=args.batch_size, exp=args.exp, familiar=args.familiar)
     errors = []
     for i in range(5):
         set_seed(i+41)
