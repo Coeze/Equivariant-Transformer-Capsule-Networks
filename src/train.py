@@ -13,13 +13,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 import os
 
-import neptune
-
-run = neptune.init_run(
-    project="coeze04/Honours-Dissertation",
-    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIzZGYwOTBiYi02N2U2LTQ2OTUtYjg2Ni1jYzFiNWU2MWE3M2QifQ==",
-    custom_run_id="a32e0c78-6a23-42f6-8c03-991717f807"
-) 
 
 def train(model, train_loader, val_loader, scheduler, optimizer, args):
     """
@@ -39,9 +32,6 @@ def train(model, train_loader, val_loader, scheduler, optimizer, args):
         )
     best_valid_acc = 0 
 
-    params = {"learning_rate": args.lr, "optimizer": "Adam", "dataset":args.dataset, "batch_size": args.batch_size, "num_epochs": args.epochs, "num_caps": args.num_caps, "caps_size": args.caps_size, "encoder": args.encoder, "depth": args.depth, "model name": args.model_name}
-    run["parameters"] = params
-
     loss_fn = DynamicRoutingLoss()
     counter = 0
 
@@ -58,15 +48,13 @@ def train(model, train_loader, val_loader, scheduler, optimizer, args):
 
         # train for 1 epoch
         train_loss, train_acc = train_one_epoch(train_loader, loss_fn, model, epoch, optimizer, writer, args)
-        run["train/loss"].append(train_loss)
-        run["train/acc"].append(train_acc)
+
 
         # evaluate on validation set
         with torch.no_grad():
             valid_loss, valid_acc = validate(model, loss_fn, val_loader, epoch, writer, args)
 
-        run["val/valid_loss"].append(valid_loss)
-        run["val/valid_acc"].append(valid_acc)
+
         if args.rank == 0 or args.rank == -1:
             msg1 = "train loss: {:.3f} - train acc: {:.3f}"
             msg2 = " - val loss: {:.3f} - val acc: {:.3f}"
@@ -109,8 +97,6 @@ def train(model, train_loader, val_loader, scheduler, optimizer, args):
     if args.rank == 0 or args.rank == -1:
         print(best_valid_acc)
         writer.close()
-
-    run.stop()
         
     return model
 
@@ -289,8 +275,7 @@ def test(model_pth, test_loader, args):
 
     perc = (100. * correct.data.item()) / len(test_loader.dataset)
     error = 100 - perc
-    run['test/acc'].append(perc) 
-    run['test/error'].append(error) 
+   
     print(
         '[*] Test Acc: {}/{} (acc - {:.2f}% - err - {:.2f}%)'.format(
             correct, len(test_loader.dataset), perc, error)
