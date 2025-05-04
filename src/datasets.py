@@ -82,14 +82,16 @@ def get_test_loader(data_dir,
                     batch_size,
                     num_workers=0,
                     num_samples=-1,
-                    pin_memory=False):
+                    pin_memory=False,
+                    exp='azimuth',
+                    familiar=False):
 
     data_dir = data_dir + '/' + dataset
 
     if dataset == "cifar10":
         trans = [transforms.ToTensor(),
                  transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))]
-        dataset = datasets.CIFAR10(data_dir, train=False, download=False,
+        dataset = datasets.CIFAR10(data_dir, train=False, download=True,
                 transform=transforms.Compose(trans))
 
     elif dataset == "svhn":
@@ -120,13 +122,9 @@ def get_test_loader(data_dir,
         [num_samples, len(dataset) - num_samples],
         generator=torch.Generator().manual_seed(42),
     )
-    else:
-        raise ValueError('Sorry please select a valid number of datapoints')
-
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory,
     )
-
 
     return data_loader
