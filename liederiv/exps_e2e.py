@@ -84,7 +84,6 @@ def main(args):
 
     print(args.modelname)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    checkpoint = torch.load(args.model_path, map_location='cpu')['model_state_dict']
     
     if args.modelname == "etcaps":
         model = m.ETCAPS(args)
@@ -94,7 +93,6 @@ def main(args):
         model = m.ResNet(args)
     elif args.modelname == "et":
         model = m.Transformer(args)
-    model.load_state_dict(checkpoint, strict=False)
     model.eval()
 
     evaluated_metrics = []
